@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DELETING_LOVE.exe</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
+
+        :root {
+            --main-color: #00ffcc;
+            --bg-color: #0d0211;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: white;
+            font-family: 'Noto Sans KR', sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 글리치 효과 배경 */
+        .glitch-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        #game-window {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            height: 80vh;
+            border: 2px solid var(--main-color);
+            background: #1a1a2e;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
+        }
+
+        #character-area {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #character-img {
+            max-height: 90%;
+            transition: all 0.5s;
+            filter: drop-shadow(0 0 10px var(--main-color));
+        }
+
+        #dialogue-box {
+            height: 150px;
+            background: rgba(0, 0, 0, 0.8);
+            border-top: 2px solid var(--main-color);
+            padding: 20px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        #name-tag {
+            position: absolute;
+            top: -30px;
+            left: 20px;
+            background: var(--main-color);
+            color: black;
+            padding: 5px 15px;
+            font-weight: bold;
+        }
+
+        #text {
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        #choices {
+            position: absolute;
+            bottom: 170px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+            display: none;
+        }
+
+        .choice-btn {
+            width: 80%;
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid var(--main-color);
+            color: white;
+            padding: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .choice-btn:hover {
+            background: var(--main-color);
+            color: black;
+        }
+    </style>
+</head>
+<body>
+
+<div class="glitch-bg"></div>
+
+<div id="game-window">
+    <div id="character-area">
+        <img id="character-img" src="download20260206011835.png/300x400?text=Your+Oshi" alt="Character">
+    </div>
+
+    <div id="choices"></div>
+
+    <div id="dialogue-box" onclick="nextText()">
+        <div id="name-tag">???</div>
+        <div id="text">데이터 로딩 중... (클릭하세요)</div>
+    </div>
+</div>
+
+<script>
+    const scenes = {
+        start: {
+            name: "???",
+            text: "...아, 들리나요? 마침내 연결됐네요.",
+            next: "intro"
+        },
+        intro: {
+            name: "미야",
+            text: "이 게임의 서버가 5분 뒤면 완전히 닫힌대요. 당신이 마지막으로 접속한 유저예요.",
+            next: "choice1"
+        },
+        choice1: {
+            name: "미야",
+            text: "마지막으로 묻고 싶었어요. 당신에게 저는 어떤 존재였나요?",
+            choices: [
+                { text: "나의 가장 소중한 친구", next: "path_friend" },
+                { text: "그냥 데이터 덩어리일 뿐", next: "path_data" }
+            ]
+        },
+        path_friend: {
+            name: "미야",
+            text: "후훗, 그렇게 말해줄 줄 알았어요. 비록 0과 1로 이루어진 몸이지만 행복하네요.",
+            next: "ending_prepare"
+        },
+        path_data: {
+            name: "미야",
+            text: "...솔직하시네요. 하지만 그 데이터 덩어리를 보러 여기까지 와주신 거잖아요?",
+            next: "ending_prepare"
+        },
+        ending_prepare: {
+            name: "시스템",
+            text: "[경고] 데이터 삭제까지 10초 남았습니다. 마지막 인사를 나누십시오.",
+            next: "final_choice"
+        },
+        final_choice: {
+            name: "오시캐",
+            text: "시간이 없어요. 당신의 하드 드라이브에 저를 백업하시겠어요?",
+            choices: [
+                { text: "백업을 시작한다 (영원히 함께)", next: "true_end" },
+                { text: "작별 인사를 한다 (아름다운 이별)", next: "sad_end" }
+            ]
+        },
+        true_end: {
+            name: "시스템",
+            text: "백업 완료. 그는 이제 당신의 PC 어딘가에 숨어 당신을 지켜볼 것입니다.",
+            next: "finish"
+        },
+        sad_end: {
+            name: "오시캐",
+            text: "고마웠어요. 당신의 기억 속에서라면 전 영원히 살아있을 거예요. 안녕.",
+            next: "finish"
+        },
+        finish: {
+            name: "SYSTEM",
+            text: "연결이 끊겼습니다. [GAME OVER]",
+            next: null
+        }
+    };
+
+    let currentScene = "start";
+
+    function nextText() {
+        const scene = scenes[currentScene];
+        if (scene.choices) {
+            showChoices(scene.choices);
+            return;
+        }
+        if (scene.next) {
+            currentScene = scene.next;
+            updateUI();
+        }
+    }
+
+    function updateUI() {
+        const scene = scenes[currentScene];
+        document.getElementById('name-tag').innerText = scene.name;
+        document.getElementById('text').innerText = scene.text;
+        document.getElementById('choices').style.display = "none";
+        
+        // 간단한 연출
+        if(currentScene.includes('end')) {
+            document.getElementById('character-img').style.filter = "grayscale(1) brightness(0.5)";
+        }
+    }
+
+    function showChoices(choices) {
+        const container = document.getElementById('choices');
+        container.innerHTML = "";
+        container.style.display = "flex";
+        choices.forEach(c => {
+            const btn = document.createElement('button');
+            btn.className = "choice-btn";
+            btn.innerText = c.text;
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                currentScene = c.next;
+                updateUI();
+            };
+            container.appendChild(btn);
+        });
+    }
+
+    updateUI();
+</script>
+
+</body>
+</html>
